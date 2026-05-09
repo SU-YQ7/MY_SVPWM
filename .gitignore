@@ -1,0 +1,29 @@
+﻿# Keil build output
+Objects/
+Listings/
+
+# Keil user/session files
+*.uvguix.*
+*.uvgui.*
+*.uvgui_*
+*.bak
+*.lst
+*.map
+*.dep
+*.crf
+*.o
+*.d
+*.axf
+*.elf
+*.htm
+*.html
+*.lnp
+
+# VS Code local logs/locks
+.vscode/*.log
+.vscode/*.lock
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
