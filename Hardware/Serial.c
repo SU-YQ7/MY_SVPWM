@@ -21,7 +21,7 @@ void Serial_Init(void)
 	GPIO_PinAFConfig(GPIOA,GPIO_PinSource9,GPIO_AF_USART1);
 	GPIO_PinAFConfig(GPIOA,GPIO_PinSource10,GPIO_AF_USART1);
 	
-	usart_structure.USART_BaudRate=9600;
+	usart_structure.USART_BaudRate=115200;
 	usart_structure.USART_HardwareFlowControl=USART_HardwareFlowControl_None;
 	usart_structure.USART_Mode=USART_Mode_Rx|USART_Mode_Tx;
 	usart_structure.USART_Parity=USART_Parity_No;

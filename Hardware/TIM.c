@@ -45,8 +45,8 @@ void TIM_Config(void)
 	GPIO_PinAFConfig(GPIOE, GPIO_PinSource11, GPIO_AF_TIM1);
 	GPIO_PinAFConfig(GPIOE, GPIO_PinSource13, GPIO_AF_TIM1);
       RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
-    TIM_TimeBaseStructure.TIM_Period = 100; // ����ֵ
-    TIM_TimeBaseStructure.TIM_Prescaler = 100; // Ԥ��Ƶ��
+    TIM_TimeBaseStructure.TIM_Period = 100; 
+    TIM_TimeBaseStructure.TIM_Prescaler = 100; 
     TIM_TimeBaseStructure.TIM_ClockDivision = 0;
     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
     TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
@@ -112,7 +112,7 @@ void TIM_Config(void)
 
    TIM_Cmd(TIM1, ENABLE);
 }
-uint32_t hallsensor_get_state(void)
+uint32_t hallsensor_state(void)
 {
     __IO static uint32_t state ;
     state  = 0;
@@ -153,8 +153,8 @@ void TIM1_UP_TIM10_IRQHandler()
 		if (TIM_GetITStatus(TIM1, TIM_IT_Update)!= RESET)	
 	{
 
-		Val=hallsensor_get_state();
-        uint16_t j=((double)cnt/4095.0)*100.0;
+		Val=hallsensor_state();
+        uint16_t j=((double)cnt/65535.0)*100.0;
         Houer_TIM(j);
 
 		TIM_ClearITPendingBit(TIM1, TIM_IT_Update);			

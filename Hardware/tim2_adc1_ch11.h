@@ -5,7 +5,7 @@
 
 void TIM2_ADC1_CH11_Init(void);
 uint16_t TIM2_ADC1_CH11_GetValue(void);
-void TIM2_IRQHandler(void);
+
 
 #endif
 

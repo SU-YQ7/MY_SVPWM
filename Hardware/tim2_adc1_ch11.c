@@ -1,10 +1,16 @@
 #include "tim2_adc1_ch11.h"
-
-static volatile uint16_t tim2_adc1_ch11_value;
+#include "my_svpwm.h"
+uint16_t tim2_adc1_ch11_value;
 uint16_t spd_time=10;
+uint16_t flag=0;
+ uint16_t ADC_value;
+ uint16_t cnt=0;
+extern uint16_t q16_m_value;
+uint16_t state;
 void m_tick(void)
 {
 	if(spd_time != 0) 		spd_time--;
+
 }
 void TIM2_ADC1_CH11_Init(void)
 {
@@ -13,6 +19,7 @@ void TIM2_ADC1_CH11_Init(void)
     NVIC_InitTypeDef NVIC_InitStructure;
     ADC_CommonInitTypeDef ADC_CommonInitStructure;
     ADC_InitTypeDef ADC_InitStructure;
+    
 
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
@@ -23,7 +30,8 @@ void TIM2_ADC1_CH11_Init(void)
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
     GPIO_Init(GPIOC, &GPIO_InitStructure);
 
-    TIM_TimeBaseInitStructure.TIM_Prescaler = 8400 - 1;
+    /* TIM2 时钟 = 84MHz；84 分频 -> 1MHz(1us/计数)，计满 50 -> 每 50us 触发一次更新事件 */
+    TIM_TimeBaseInitStructure.TIM_Prescaler = 84 - 1;
     TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Up;
     TIM_TimeBaseInitStructure.TIM_Period = 50 - 1;
     TIM_TimeBaseInitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
@@ -61,21 +69,26 @@ void TIM2_ADC1_CH11_Init(void)
     TIM_Cmd(TIM2, ENABLE);
 }
 
-uint16_t TIM2_ADC1_CH11_GetValue(void)
-{
-    while (ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET)
-     {
-     }
-     tim2_adc1_ch11_value = ADC_GetConversionValue(ADC1);
-     ADC_ClearFlag(ADC1, ADC_FLAG_EOC);
-    return tim2_adc1_ch11_value;
-}
+//uint16_t TIM2_ADC1_CH11_GetValue(void)
+//{
+//    while (ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET)
+//     {
+//     }
+//     tim2_adc1_ch11_value = ADC_GetConversionValue(ADC1);
+//     ADC_ClearFlag(ADC1, ADC_FLAG_EOC);
+//		 flag=0;
+//    return tim2_adc1_ch11_value;
+//}
 
 void TIM2_IRQHandler(void)
 {
     if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET)
     {
-        m_tick();
+            ADC_value = ADC_GetConversionValue(ADC1);
+            m_us_radius_calculate();
+		      cnt=q16_m_value;
+	        state = m_rotor_angle_calculate();
+		  	m_tick();
         TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
     }
 }
