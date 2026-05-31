@@ -9,5 +9,5 @@ extern uint16_t mech_angle;    //机械角度 0~359 (相对上电位置)
 void m_us_radius_calculate(void);
 uint16_t hallsensor_get_state(void);
 uint16_t m_rotor_angle_calculate(void);
-
+void m_svpwm_generate(uint16_t us_m, uint16_t us_angle);
 #endif
