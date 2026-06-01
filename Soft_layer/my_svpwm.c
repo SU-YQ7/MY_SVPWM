@@ -7,7 +7,7 @@ uint16_t us_angle=0;
 //三角函数计算......
 #define PI 3.14159265358979f
 #define SQRT3DIV2  					56756  //sqrt3/2 * 65536 = 56755.84 ≈ 56756  //0.16格式
-#define PWM_PERIOD_T_VALUE   		(6000)  
+#define PWM_PERIOD_T_VALUE   		(4200)  
 
 /*死区时间：占空比最大值、最小值*/
 #define DEAD_TIME 					240   		//2us  上升沿2us 下降沿2us
@@ -15,9 +15,9 @@ uint16_t us_angle=0;
 #define MAX_DUTY_VALUE				((PWM_PERIOD_T_VALUE >> 1) - (DEAD_TIME + (DEAD_TIME >> 1)))
 int16_t sin_x=0;
 int16_t cos_x=0;
-int16_t m_svpwm_unit_q15_ux=0;
 int16_t m_svpwm_unit_q15_uy=0;
 int16_t m_svpwm_unit_q15_uz=0;
+int16_t m_svpwm_unit_q15_ux=0;
 uint16_t m_svpwm_unit_q16_tc_out=0;
 uint16_t m_svpwm_unit_q16_ta_out=0;
 uint16_t m_svpwm_unit_q16_tb_out=0;
@@ -28,28 +28,13 @@ int16_t m_svpwm_unit_q15_ta=0;
 int16_t m_svpwm_unit_q15_tb=0;
 
 
-
-//霍尔更新变量......
-uint16_t hall_upate=0;
-uint16_t hall_capture_unit=0;
-uint16_t start_sign=0;
-
-//角度检测变量......
-
-uint16_t enter_cnt=0;
-uint16_t rotor_angle=0;       //电角度 0~359
-uint16_t mech_angle=0;        //机械角度 0~359 (相对上电位置)
-/*电机极对数：机械转一圈经过 3 个电周期(串口 3 次 0°)*/
-#define POLE_PAIRS   3
-
 //模长检测变量......
 extern uint16_t ADC_value;
 uint16_t q16_m_value;
 extern uint16_t spd_time;
 
 uint16_t m_svpwm_unit_sector=0;
-/*霍尔状态(下标)→电角度，由开环标定实测：正转序列 4→6→2→3→1→5，间隔约60°*/
-static const uint16_t  ROTOR_ANGLE_TABLE_CW[7]   = {0,157,47,103,282,218,339};
+
 /*
   ******************************************************************************
   * @brief  ADC检测模长
@@ -115,157 +100,7 @@ uint16_t q16_adc_val = 0;
 		q16_m_value = 655;
 	}
 }
-/*
-  ******************************************************************************
-  * @brief  霍尔传感器
-  * @param  None.
-  * @retval 霍尔状态
-  *****************************************************************************
-*/
-uint16_t hallsensor_get_state(void)
-{
-    __IO static uint16_t state=0 ;
-	static uint16_t next_state =0;
-	state=0;
-  if(GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_5) != RESET) //U
-  {
-      state |= 0x1U;
-  }
-  if(GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_4) != RESET) //V
-   {
-      state |= 0x02U;
-   }
-  if(GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_3) != RESET) //W
-   {
-       state |= 0x04U;
-   }
-  if(next_state != state)
-	 {
- 		hall_upate=1;
-		hall_capture_unit++;
-		next_state =state;
-   }
-	 else
-	 {
-		hall_upate=0;
-	 }
-   return state;
-}
 
-/*
-  ******************************************************************************
-  * @brief  转子位置角计算：间隔50us进行一次计算
-  * @param  None.
-  * @retval 转子位置角 Q16
-  *****************************************************************************
-*/
-
-uint16_t m_rotor_angle_calculate(void)
-{
-	uint32_t change_hall=0;
-	static uint16_t sector_ticks  = 0;       //每 60° 经历的 50us tick 数
-	static uint32_t angle_inc_q16 = 0;       //每个 tick 的角度增量, Q16(度)
-	static uint32_t angle_q16     = 0;       //当前电角度, Q16(度)
-	static uint16_t stall_ticks   = 0;       //距上次霍尔跳变的 tick 数
-	static uint16_t cur_base      = 0;       //当前扇区电角度基准
-	static uint16_t prev_base     = 0xFFFF;  //上一扇区电角度基准
-	static uint8_t  elec_rev      = 0;       //已完成电周期数 0~(POLE_PAIRS-1)
-
-	enter_cnt ++;
-	change_hall=hallsensor_get_state();
-
-	/*无效霍尔态(0 或 7)：故障，保持上一次角度*/
-	if(change_hall < 1 || change_hall > 6)
-	{
-		return rotor_angle;
-	}
-
-	if(hall_upate)
-	{
-		uint16_t base;
-		hall_upate=0;
-		stall_ticks = 0;   //来了新沿，清失速计数
-
-		/*本次霍尔沿对应的电角度扇区基准角*/
-		base = ROTOR_ANGLE_TABLE_CW[change_hall];
-
-		/*电周期回绕检测：基准角由 300 跳回 0(CW)说明走完一个电周期*/
-		if(prev_base != 0xFFFF && base < prev_base)
-		{
-			if(++elec_rev >= POLE_PAIRS)
-			{
-				elec_rev = 0;
-			}
-		}
-		prev_base = base;
-		cur_base  = base;
-
-		/*角度对齐到扇区基准角，消除累计误差*/
-		angle_q16 = (uint32_t)base << 16;
-
-		/*每 9 次跳变更新一次平均扇区时间*/
-		if(hall_capture_unit==9)
-		{
-			sector_ticks = (uint16_t)(enter_cnt / 9);   //每 60° 的 tick 数
-			start_sign=1;
-			hall_capture_unit=0;
-			enter_cnt=0;
-		}
-
-		/*电机运行初始阶段：霍尔尚未标定速度。
-		  不再 return 0(否则矢量钉死在 0°，转子转不起来→永远标定不了→死锁)，
-		  而是直接用霍尔扇区基准角 base 作为电角度强制换相(六步式粗换相)。
-		  angle_q16 上面已对齐到 base，下方会据此输出 rotor_angle=base，
-		  配合调用处 +90° 转矩角即可产生起动转矩。*/
-		if(start_sign == 0)
-		{
-			rotor_angle = base;
-		}
-
-		/*每 tick 增量 = 60° / 每扇区 tick 数，用 Q16 保留小数*/
-		if(sector_ticks != 0)
-		{
-			angle_inc_q16 = ((uint32_t)60 << 16) / sector_ticks;
-		}
-	}
-	else
-	{
-		stall_ticks++;
-		/*超过上次扇区时间的 2 倍仍无跳变 -> 判定停转/堵转，冻结角度*/
-		if(sector_ticks != 0 && stall_ticks > (uint16_t)(sector_ticks * 2))
-		{
-			angle_inc_q16 = 0;   //停止插值推进，角度冻结在最后的真实扇区角
-			start_sign    = 0;   //速度估计作废，重新起转时再标定
-		}
-		else
-		{
-			/*沿与沿之间线性插值推算角度，但不越过本扇区终点(等下一个霍尔沿翻扇区)*/
-			uint32_t cap = ((uint32_t)(cur_base + 60)) << 16;
-			angle_q16 += angle_inc_q16;
-			if(angle_q16 > cap)
-			{
-				angle_q16 = cap;
-			}
-		}
-	}
-
-	/*电角度 0~359*/
-	{
-		uint16_t elec = (uint16_t)(angle_q16 >> 16);
-		if(elec >= 360) elec -= 360;
-		rotor_angle = elec;
-	}
-
-	/*机械角度 = (电周期数 x 360 + 电角度) / 极对数，相对上电位置*/
-	{
-		uint32_t total_elec = (uint32_t)elec_rev * 360 + (angle_q16 >> 16);
-		uint16_t mech = (uint16_t)(total_elec / POLE_PAIRS);
-		if(mech >= 360) mech -= 360;
-		mech_angle = mech;
-	}
-
-	return rotor_angle;   //返回电角度(0~359)，供 SVPWM 电压矢量旋转使用
-}
 /*
   ******************************************************************************
   * @brief  扇区计算

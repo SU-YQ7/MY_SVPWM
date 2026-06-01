@@ -3,35 +3,15 @@
 #include "ADC.h"
 uint32_t Val = 0;
 extern uint16_t cnt;
-void GPIO_Input(void)
-{
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 
-	GPIO_InitTypeDef  GPIO_InitStructure;
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3|GPIO_Pin_4|GPIO_Pin_5;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-    GPIO_Init(GPIOA, &GPIO_InitStructure);
-	 RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF, ENABLE);
-
-	GPIO_InitTypeDef  GPIOF_InitStructure;
-    GPIOF_InitStructure.GPIO_Pin = GPIO_Pin_6;
-    GPIOF_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-    GPIOF_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-    GPIO_Init(GPIOF, &GPIOF_InitStructure);
-	GPIOF_InitStructure.GPIO_Pin = GPIO_Pin_7;
-    GPIOF_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_Init(GPIOF, &GPIOF_InitStructure);
-	
-}
 
 void TIM_Config(void)
 {
 
-	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
+	  TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
     TIM_OCInitTypeDef  TIM_OCInitStructure;
-   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);
-   GPIO_InitTypeDef  GPIO_InitStructure;
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);
+    GPIO_InitTypeDef  GPIO_InitStructure;
 
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9|GPIO_Pin_11|GPIO_Pin_13;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
@@ -53,8 +33,8 @@ void TIM_Config(void)
   	GPIO_PinAFConfig(GPIOE, GPIO_PinSource10, GPIO_AF_TIM1);
   	GPIO_PinAFConfig(GPIOE, GPIO_PinSource12, GPIO_AF_TIM1);
       RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);              // 使能 TIM1 时钟（挂在 APB2 总线上）
-    TIM_TimeBaseStructure.TIM_Period = 6000;                           // 自动重装值 ARR=5999+1，即计数顶点(占空比满量程基准)
-    TIM_TimeBaseStructure.TIM_Prescaler = 10-1;                          // 预分频 PSC=9，计数时钟 = TIM1时钟/10
+    TIM_TimeBaseStructure.TIM_Period = 4200;                           // 自动重装值 ARR=5999+1，即计数顶点(占空比满量程基准)
+    TIM_TimeBaseStructure.TIM_Prescaler = 0;                          // 预分频 PSC=9，计数时钟 = TIM1时钟/10
     TIM_TimeBaseStructure.TIM_ClockDivision = 0;                         // 时钟分频(用于死区/输入滤波采样)，此处不分频
     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_CenterAligned1; // 中央对齐模式(三角波计数 0→ARR→0)，SVPWM 标准载波
     TIM_TimeBaseStructure.TIM_RepetitionCounter = 1;                     // 重复计数=1，吞掉一次更新事件，使每个三角波周期只触发一次 UP 中断
@@ -121,26 +101,6 @@ void TIM_Config(void)
 
    TIM_Cmd(TIM1, ENABLE);                                            // 启动 TIM1 计数器
 }
-uint32_t hallsensor_state(void)
-{
-    __IO static uint32_t state ;
-    state  = 0;
-
-        if(GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_5) != RESET)  
-        {
-            state |= 0x01U;
-        }
-        if(GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_4) != RESET) 
-        {
-            state |= 0x02U;
-        }
-        if(GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_3) != RESET)  
-        {
-            state |= 0x04U;
-        }
-    
-    return state;
-}
 
 void GPIO_Output(void)
 {
@@ -161,13 +121,7 @@ void TIM1_UP_TIM10_IRQHandler()
 {
 		if (TIM_GetITStatus(TIM1, TIM_IT_Update)!= RESET)	
 	{
-
-//		    Val=hallsensor_state();
-//        uint16_t j=((double)cnt/65535.0)*100.0;
-//        Houer_TIM(j);
-
-		TIM_ClearITPendingBit(TIM1, TIM_IT_Update);			
-																													
+		TIM_ClearITPendingBit(TIM1, TIM_IT_Update);																								
 	}
 	
 }

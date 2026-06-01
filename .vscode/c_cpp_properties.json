@@ -3,15 +3,15 @@
         {
             "name": "Target 1",
             "includePath": [
-                "c:\\Users\\苏永庆\\OneDrive\\桌面\\MY_SVPWM\\Startup",
-                "c:\\Users\\苏永庆\\OneDrive\\桌面\\MY_SVPWM\\standard\\inc",
-                "c:\\Users\\苏永庆\\OneDrive\\桌面\\MY_SVPWM\\user",
-                "c:\\Users\\苏永庆\\OneDrive\\桌面\\MY_SVPWM\\Hardware",
-                "c:\\Users\\苏永庆\\OneDrive\\桌面\\MY_SVPWM\\Soft_layer",
+                "c:\\Users\\苏永庆\\OneDrive\\桌面\\电机代码\\SVPWM(磁编码）\\Startup",
+                "c:\\Users\\苏永庆\\OneDrive\\桌面\\电机代码\\SVPWM(磁编码）\\standard\\inc",
+                "c:\\Users\\苏永庆\\OneDrive\\桌面\\电机代码\\SVPWM(磁编码）\\user",
+                "c:\\Users\\苏永庆\\OneDrive\\桌面\\电机代码\\SVPWM(磁编码）\\Hardware",
+                "c:\\Users\\苏永庆\\OneDrive\\桌面\\电机代码\\SVPWM(磁编码）\\Soft_layer",
                 "D:\\ARM\\ARMCC\\include",
                 "D:\\ARM\\ARMCC\\include\\rw",
-                "c:\\Users\\苏永庆\\OneDrive\\桌面\\MY_SVPWM\\standard\\src",
-                "c:\\Users\\苏永庆\\OneDrive\\桌面\\MY_SVPWM\\include"
+                "c:\\Users\\苏永庆\\OneDrive\\桌面\\电机代码\\SVPWM(磁编码）\\standard\\src",
+                "c:\\Users\\苏永庆\\OneDrive\\桌面\\电机代码\\SVPWM(磁编码）\\include"
             ],
             "defines": [
                 "STM32F429_439xx",

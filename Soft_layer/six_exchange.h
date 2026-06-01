@@ -3,7 +3,6 @@
 void Shut_Down(void);
 
 void  GPIO_SIX_Exchange(void);
-void Houer_TIM(int i);
 #endif
 
 
